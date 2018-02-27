@@ -1,9 +1,8 @@
-﻿StuntGP Widescreen Fix
+﻿Starship Troopers FOV Changer
 =====================
-A basic program for replacing aspect ratio bytes in exe file in order to fix stretching.
+A basic program for changing default FOV in Starship Troopers (by editing exe file).
 
 Credits
 -------
   * [SuicideMachine](http://twitch.tv/suicidemachine)
-  * [przemo509](https://github.com/przemo509) - fix for different EXE file.
   
