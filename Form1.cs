@@ -201,6 +201,7 @@ namespace StarshipTroopers_FOVChanger
                 if(parsedFOV > 45f && parsedFOV < 179f)
                 {
                     fov = parsedFOV;
+                    GetArray();
                 }
                 else
                     fov = 90f;
