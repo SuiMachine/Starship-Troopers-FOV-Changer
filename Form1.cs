@@ -26,7 +26,7 @@ namespace StarshipTroopers_FOVChanger
 
         byte[] FovAsArray = new byte[4];
         byte[] data;
-        int adress = 0x002505C0;
+        int address = 0x0;
 
         public Form1()
         {
@@ -42,37 +42,73 @@ namespace StarshipTroopers_FOVChanger
             }
             else
             {
-                if(!CheckForCorrectFile())
+                //3F96CBE4
+                //E4CB963F
+                address = FindAddressUsingPattern("C7 86 84 00 00 00 CD CC 4C 3D " +
+                    "C7 86 88 00 00 00 00 60 6A 46 C7 86 8C 00 00 00 " +
+                    "E4 CB 96 3F 89 86 90 00 00 00 C7 86 94 00 00 00 " +
+                    "00 00 80 40"
+                    , 26);
+
+                Debug.WriteLine("Found address: " + address.ToString("X4"));
+
+
+                if (address != 0x0)
                 {
-                    MessageBox.Show("Wrong version of the file. Check WSGF!");
-                    Close();
-                }
-                else
-                {
-                    data = GetBytesFromAFile(_GamesExecutable);
                     string s = BitConverter.ToString(data);
 
-                    fov = ConvertToDegrees(BitConverter.ToSingle(data, adress));
+                    fov = ConvertToDegrees(BitConverter.ToSingle(data, address));
                     TB_FOV.Text = fov.ToString();
                     TB_ResX.Text = width.ToString();
                     TB_ResY.Text = height.ToString();
                     GetArray();
                 }
+                else
+                {
+                    MessageBox.Show("Not FOV was found using the pattern. Might consinder sending exe to FOV changer developer... maybe?", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Close();
+                }
             }
         }
 
-        private bool CheckForCorrectFile()
+        /// <summary>
+        /// Uses byte pattern (converted from string with white spaces seperating bytes - that's important) to find a location of a value in memory.
+        /// </summary>
+        /// <param name="pattern">Pattern of bytes as a string (bytes have to be white space seperated!)</param>
+        /// <param name="locationOfValue">Location of looked value in the patern - this will both be calculated for calculating the address AND to skip the value if it was changed.</param>
+        /// <returns>Address of found value or 0 if nothing was found.</returns>
+        private int FindAddressUsingPattern(string pattern, int locationOfValue)
         {
-            FileInfo inf = new FileInfo(_GamesExecutable);
-            if(inf.Length != 9744384)
-                return false;
+            List<byte> convertedValues = new List<byte>();
+            string[] split = pattern.Split();
+            foreach(var byteAsString in split)
+            {
+                if (byteAsString.Length != 2)
+                    return 0;
 
-            var ver = FileVersionInfo.GetVersionInfo(_GamesExecutable);
-            string verSafe = ver.FileVersion.Replace(".", ","); //not sure if this is regional or not, so I replace it for safety
-            if(verSafe == "0, 5, 0, 24")
-                return true;
-            else
-                return false;
+                convertedValues.Add(Convert.ToByte(byteAsString, 16));
+            }
+
+            data = GetBytesFromAFile(_GamesExecutable);
+            for (int i=0; i<data.Length; i++)
+            {
+                for(int j=0; j<data.Length-i; j++)
+                {
+                    if (j == convertedValues.Count)
+                        return i + locationOfValue;
+
+                    //skip the value changed
+                    if (j >= locationOfValue && j < locationOfValue + 4)
+                        continue;
+
+                    var readByte = data[i + j];
+                    if (readByte != convertedValues[j])
+                        break;
+                }
+            }
+
+            return 0x0;
+
         }
 
         private void CB_HorizontalPlusFOV_CheckedChanged(object sender, EventArgs e)
@@ -109,6 +145,7 @@ namespace StarshipTroopers_FOVChanger
             GetArray();
         }
 
+        //Creates an array of bytes to be displayed and calculates FOV
         private void GetArray()
         {
             if(!VerticalMinus)
@@ -161,10 +198,10 @@ namespace StarshipTroopers_FOVChanger
         private void B_WriteToAFile_Click(object sender, EventArgs e)
         {
             //Replacing bytes
-            data[adress + 0] = FovAsArray[0];
-            data[adress + 1] = FovAsArray[1];
-            data[adress + 2] = FovAsArray[2];
-            data[adress + 3] = FovAsArray[3];
+            data[address + 0] = FovAsArray[0];
+            data[address + 1] = FovAsArray[1];
+            data[address + 2] = FovAsArray[2];
+            data[address + 3] = FovAsArray[3];
 
             //Backup
             if (!File.Exists(_GamesExecutableBackup))
