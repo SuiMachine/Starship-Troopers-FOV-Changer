@@ -4,5 +4,5 @@ A basic program for changing default FOV in Starship Troopers (by editing exe fi
 
 Credits
 -------
-  * [SuicideMachine](http://twitch.tv/suicidemachine)
+  * [SuicideMachine](http://twitch.tv/suimachine)
   
